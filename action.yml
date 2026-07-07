@@ -1,4 +1,4 @@
-name: "Install LLVM and Clang"
+name: "Install LLVM and Clang (fork)"
 description: "Downloads and installs LLVM and Clang binaries."
 
 branding:
