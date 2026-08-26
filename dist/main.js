@@ -25763,13 +25763,24 @@ async function $933282860146970c$var$install(options) {
     console.log(`Downloading and extracting '${url}'...`);
     const archive = await $29bce52ab004b1f2$export$33e04714c8517df2(url, "", options.auth ?? undefined);
     let exit;
-    if (os === "win32") exit = await $cec22f610b43fe74$export$78e3044358792147("7z", [
-        "x",
-        archive,
-        `-o${options.directory}`,
-        "-y"
-    ]);
-    else {
+    if (os === "win32") {
+        exit = await $cec22f610b43fe74$export$78e3044358792147("7z", [
+            "x",
+            archive,
+            `-o${options.directory}`,
+            "-y"
+        ]);
+        if (exit === 0) {
+            const entries = $keg7O$fs.readdirSync(options.directory);
+            if (entries.length === 1) {
+                const subdir = $keg7O$path.join(options.directory, entries[0]);
+                if ($keg7O$fs.statSync(subdir).isDirectory()) {
+                    for (const entry of $keg7O$fs.readdirSync(subdir))$keg7O$fs.renameSync($keg7O$path.join(subdir, entry), $keg7O$path.join(options.directory, entry));
+                    $keg7O$fs.rmdirSync(subdir);
+                }
+            }
+        }
+    } else {
         const directory = options.directory ?? "";
         await $6e76117c9393a1b8$export$947c5773f676aca3(directory);
         exit = await $cec22f610b43fe74$export$78e3044358792147("tar", [
