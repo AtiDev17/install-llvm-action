@@ -25772,23 +25772,29 @@ async function $933282860146970c$var$install(options) {
         ]);
         if (exit === 0) {
             console.log(`Contents of ${options.directory} after xz extraction: ${$keg7O$fs.readdirSync(options.directory).join(", ")}`);
-            const tarFiles = $keg7O$fs.readdirSync(options.directory).filter((f)=>f.endsWith(".tar"));
-            if (tarFiles.length === 1) {
-                const tarPath = $keg7O$path.join(options.directory, tarFiles[0]);
-                console.log(`Found tar file: ${tarPath}, extracting...`);
+            // 7z may leave an intermediate file (e.g. "file~" or "file.tar") for compound tar.xz archives
+            const nonDirFiles = $keg7O$fs.readdirSync(options.directory).filter((f)=>{
+                try {
+                    return !$keg7O$fs.statSync($keg7O$path.join(options.directory, f)).isDirectory();
+                } catch  {
+                    return false;
+                }
+            });
+            if (nonDirFiles.length === 1) {
+                const innerPath = $keg7O$path.join(options.directory, nonDirFiles[0]);
+                console.log(`Found intermediate file: ${innerPath}, extracting...`);
                 exit = await $cec22f610b43fe74$export$78e3044358792147("7z", [
                     "x",
-                    tarPath,
+                    innerPath,
                     `-o${options.directory}`,
                     "-y"
                 ]);
-                if (exit === 0) $keg7O$fs.unlinkSync(tarPath);
+                if (exit === 0) $keg7O$fs.unlinkSync(innerPath);
             }
             console.log(`Contents of ${options.directory} before strip: ${$keg7O$fs.readdirSync(options.directory).join(", ")}`);
         }
         if (exit === 0) {
             // Strip top-level directory (equivalent to --strip-components=1)
-            // Find directories only (ignore hidden/metadata files like Thumbs.db)
             const allEntries = $keg7O$fs.readdirSync(options.directory);
             const dirEntries = allEntries.filter((f)=>{
                 try {

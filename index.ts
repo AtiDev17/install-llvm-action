@@ -132,13 +132,16 @@ async function install(options: Options): Promise<void> {
     if (exit === 0) {
       console.log(`Contents of ${options.directory} after xz extraction: ${fs.readdirSync(options.directory).join(", ")}`);
 
-      const tarFiles = fs.readdirSync(options.directory).filter(f => f.endsWith(".tar"));
-      if (tarFiles.length === 1) {
-        const tarPath = path.join(options.directory, tarFiles[0]);
-        console.log(`Found tar file: ${tarPath}, extracting...`);
-        exit = await exec.exec("7z", ["x", tarPath, `-o${options.directory}`, "-y"]);
+      // 7z may leave an intermediate file (e.g. "file~" or "file.tar") for compound tar.xz archives
+      const nonDirFiles = fs.readdirSync(options.directory).filter(f => {
+        try { return !fs.statSync(path.join(options.directory, f)).isDirectory(); } catch { return false; }
+      });
+      if (nonDirFiles.length === 1) {
+        const innerPath = path.join(options.directory, nonDirFiles[0]);
+        console.log(`Found intermediate file: ${innerPath}, extracting...`);
+        exit = await exec.exec("7z", ["x", innerPath, `-o${options.directory}`, "-y"]);
         if (exit === 0) {
-          fs.unlinkSync(tarPath);
+          fs.unlinkSync(innerPath);
         }
       }
 
@@ -146,7 +149,6 @@ async function install(options: Options): Promise<void> {
     }
     if (exit === 0) {
       // Strip top-level directory (equivalent to --strip-components=1)
-      // Find directories only (ignore hidden/metadata files like Thumbs.db)
       const allEntries = fs.readdirSync(options.directory);
       const dirEntries = allEntries.filter(f => {
         try { return fs.statSync(path.join(options.directory, f)).isDirectory(); } catch { return false; }
