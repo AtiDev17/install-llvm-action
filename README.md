@@ -14,16 +14,16 @@ Released under the Apache License 2.0.
 
 ```yml
 - name: Install LLVM and Clang
-  uses: AtiDev17/install-llvm-action@v2.0.10
+  uses: AtiDev17/install-llvm-action@v2.0.11
   with:
     version: "10.0"
-```
+  ```
 
 ## Example Usage (with non-default installation directory):
 
 ```yml
 - name: Install LLVM and Clang
-  uses: AtiDev17/install-llvm-action@v2.0.10
+  uses: AtiDev17/install-llvm-action@v2.0.11
   with:
     version: "10.0"
     directory: ${{ runner.temp }}/llvm
