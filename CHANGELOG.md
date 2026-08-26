@@ -1,3 +1,8 @@
+## [2.0.11] - 2026-08-26
+
+- Added support for LLVM and Clang 23
+- Updated Windows asset format from `.exe` to `.tar.xz` (LLVM 23+ dropped `.exe` installers)
+
 ## [2.0.10] - 2026-07-07
 
 - Added support for LLVM and Clang 22
