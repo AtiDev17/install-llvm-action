@@ -129,6 +129,18 @@ async function install(options: Options): Promise<void> {
   let exit;
   if (os === "win32") {
     exit = await exec.exec("7z", ["x", archive, `-o${options.directory}`, "-y"]);
+    if (exit === 0) {
+      const entries = fs.readdirSync(options.directory);
+      if (entries.length === 1) {
+        const subdir = path.join(options.directory, entries[0]);
+        if (fs.statSync(subdir).isDirectory()) {
+          for (const entry of fs.readdirSync(subdir)) {
+            fs.renameSync(path.join(subdir, entry), path.join(options.directory, entry));
+          }
+          fs.rmdirSync(subdir);
+        }
+      }
+    }
   } else {
     const directory = options.directory ?? "";
     await io.mkdirP(directory);
