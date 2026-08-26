@@ -20,8 +20,25 @@ jobs:
       - name: Install LLVM and Clang
         uses: ./
         with:
-          version: 17
+          version: 23
           env: true
 
-      - name: Debug
-        uses: mxschmitt/action-tmate@v3
+      - name: Show PATH
+        run: echo $env:PATH
+
+      - name: Check install directory
+        run: |
+          echo "LLVM_PATH=$env:LLVM_PATH"
+          if (Test-Path "$env:LLVM_PATH\bin") {
+            echo "bin/ exists"
+            Get-ChildItem "$env:LLVM_PATH\bin" -Name | Select-Object -First 20
+          } else {
+            echo "bin/ does NOT exist"
+            echo "Contents of install dir:"
+            Get-ChildItem "$env:LLVM_PATH" -Name
+          }
+
+      - name: Test clang-cl
+        run: |
+          echo "CC=$env:CC"
+          & "$env:LLVM_PATH\bin\clang-cl.exe" --version
