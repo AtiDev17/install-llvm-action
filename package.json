@@ -1,6 +1,6 @@
 {
   "name": "install-llvm-action",
-  "version": "2.0.10",
+  "version": "2.0.11",
   "description": "A GitHub Action for downloading and installing LLVM and Clang binaries.",
   "author": "Kyle Mayes <kyle@mayeses.com>",
   "license": "Apache-2.0",
