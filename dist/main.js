@@ -25771,6 +25771,21 @@ async function $933282860146970c$var$install(options) {
             "-y"
         ]);
         if (exit === 0) {
+            // 7z may only decompress the outer xz layer, leaving a .tar file
+            const tarFiles = $keg7O$fs.readdirSync(options.directory).filter((f)=>f.endsWith(".tar"));
+            if (tarFiles.length === 1) {
+                const tarPath = $keg7O$path.join(options.directory, tarFiles[0]);
+                exit = await $cec22f610b43fe74$export$78e3044358792147("7z", [
+                    "x",
+                    tarPath,
+                    `-o${options.directory}`,
+                    "-y"
+                ]);
+                if (exit === 0) $keg7O$fs.unlinkSync(tarPath);
+            }
+        }
+        if (exit === 0) {
+            // Strip top-level directory (equivalent to --strip-components=1)
             const entries = $keg7O$fs.readdirSync(options.directory);
             if (entries.length === 1) {
                 const subdir = $keg7O$path.join(options.directory, entries[0]);
