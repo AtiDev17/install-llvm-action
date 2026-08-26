@@ -21,6 +21,7 @@ jobs:
         uses: ./
         with:
           version: 23
+          directory: D:\a\_temp\llvm
           env: true
 
       - name: Show PATH

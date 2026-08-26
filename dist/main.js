@@ -25771,10 +25771,11 @@ async function $933282860146970c$var$install(options) {
             "-y"
         ]);
         if (exit === 0) {
-            // 7z may only decompress the outer xz layer, leaving a .tar file
+            console.log(`Contents of ${options.directory} after xz extraction: ${$keg7O$fs.readdirSync(options.directory).join(", ")}`);
             const tarFiles = $keg7O$fs.readdirSync(options.directory).filter((f)=>f.endsWith(".tar"));
             if (tarFiles.length === 1) {
                 const tarPath = $keg7O$path.join(options.directory, tarFiles[0]);
+                console.log(`Found tar file: ${tarPath}, extracting...`);
                 exit = await $cec22f610b43fe74$export$78e3044358792147("7z", [
                     "x",
                     tarPath,
@@ -25783,17 +25784,26 @@ async function $933282860146970c$var$install(options) {
                 ]);
                 if (exit === 0) $keg7O$fs.unlinkSync(tarPath);
             }
+            console.log(`Contents of ${options.directory} before strip: ${$keg7O$fs.readdirSync(options.directory).join(", ")}`);
         }
         if (exit === 0) {
             // Strip top-level directory (equivalent to --strip-components=1)
-            const entries = $keg7O$fs.readdirSync(options.directory);
-            if (entries.length === 1) {
-                const subdir = $keg7O$path.join(options.directory, entries[0]);
-                if ($keg7O$fs.statSync(subdir).isDirectory()) {
-                    for (const entry of $keg7O$fs.readdirSync(subdir))$keg7O$fs.renameSync($keg7O$path.join(subdir, entry), $keg7O$path.join(options.directory, entry));
-                    $keg7O$fs.rmdirSync(subdir);
+            // Find directories only (ignore hidden/metadata files like Thumbs.db)
+            const allEntries = $keg7O$fs.readdirSync(options.directory);
+            const dirEntries = allEntries.filter((f)=>{
+                try {
+                    return $keg7O$fs.statSync($keg7O$path.join(options.directory, f)).isDirectory();
+                } catch  {
+                    return false;
                 }
+            });
+            if (dirEntries.length === 1) {
+                const subdir = $keg7O$path.join(options.directory, dirEntries[0]);
+                console.log(`Stripping wrapper directory: ${subdir}`);
+                for (const entry of $keg7O$fs.readdirSync(subdir))$keg7O$fs.renameSync($keg7O$path.join(subdir, entry), $keg7O$path.join(options.directory, entry));
+                $keg7O$fs.rmdirSync(subdir);
             }
+            console.log(`Final contents of ${options.directory}: ${$keg7O$fs.readdirSync(options.directory).join(", ")}`);
         }
     } else {
         const directory = options.directory ?? "";
