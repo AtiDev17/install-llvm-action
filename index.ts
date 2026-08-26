@@ -130,6 +130,18 @@ async function install(options: Options): Promise<void> {
   if (os === "win32") {
     exit = await exec.exec("7z", ["x", archive, `-o${options.directory}`, "-y"]);
     if (exit === 0) {
+      // 7z may only decompress the outer xz layer, leaving a .tar file
+      const tarFiles = fs.readdirSync(options.directory).filter(f => f.endsWith(".tar"));
+      if (tarFiles.length === 1) {
+        const tarPath = path.join(options.directory, tarFiles[0]);
+        exit = await exec.exec("7z", ["x", tarPath, `-o${options.directory}`, "-y"]);
+        if (exit === 0) {
+          fs.unlinkSync(tarPath);
+        }
+      }
+    }
+    if (exit === 0) {
+      // Strip top-level directory (equivalent to --strip-components=1)
       const entries = fs.readdirSync(options.directory);
       if (entries.length === 1) {
         const subdir = path.join(options.directory, entries[0]);
