@@ -58,12 +58,33 @@ export function getOptions(): Options {
  * Gets the specific LLVM versions supported by this action compatible with the
  * supplied (specific or minimum) LLVM version in descending order of release
  * (e.g., `5.0.2`, `5.0.1`, and `5.0.0` for `5`).
+ *
+ * Supports the special version string "latest" which resolves to the highest
+ * available version for the current platform.
  */
+function parseVersion(v: string): number {
+  const match = /(\d+)\.(\d+)\.(\d+)/.exec(v);
+  if (match) {
+    const [, major, minor, patch] = match.map(Number);
+    return major * 100_000_000 + minor * 100_000 + patch;
+  }
+  return 0;
+}
+
+function sortVersions(versions: string[]): string[] {
+  return versions.sort((a, b) => parseVersion(b) - parseVersion(a));
+}
+
 function getSpecificVersions(specificVersions: string[], version: string): string[] {
-  return Array.from(specificVersions)
-    .filter(v => /^\d+\.\d+\.\d+$/.test(v) && (v.startsWith(`${version}.`) || v === version))
-    .sort()
-    .reverse();
+  const validVersions = specificVersions.filter(v => /^\d+\.\d+\.\d+$/.test(v));
+
+  if (version === "latest") {
+    return sortVersions(validVersions);
+  }
+
+  return sortVersions(
+    validVersions.filter(v => v.startsWith(`${version}.`) || v === version),
+  );
 }
 
 //================================================
@@ -128,7 +149,58 @@ async function install(options: Options): Promise<void> {
 
   let exit;
   if (os === "win32") {
+    // 7z may handle tar.xz differently depending on version:
+    // - Newer 7z: extracts both xz and tar in one pass (contents directly in output)
+    // - Older 7z: extracts xz layer only, leaving a .tar intermediate
+    // - Some 7z: extracts xz layer only, leaving a ~ temp file (the decompressed tar)
     exit = await exec.exec("7z", ["x", archive, `-o${options.directory}`, "-y"]);
+    if (exit === 0) {
+      // Collect tar intermediates: .tar files or ~ temp files (decompressed tar)
+      let entries = fs.readdirSync(options.directory);
+      let tarFiles = entries.filter(f => f.endsWith(".tar") || f.endsWith("~"));
+
+      while (tarFiles.length > 0) {
+        const tarFile = tarFiles.shift()!;
+        let tarPath = path.join(options.directory, tarFile);
+
+        // ~ files are decompressed tar archives — rename so 7z can extract them
+        if (tarFile.endsWith("~")) {
+          const newPath = tarPath.replace(/~$/, ".tar");
+          fs.renameSync(tarPath, newPath);
+          tarPath = newPath;
+        }
+
+        console.log(`Extracting intermediate tar: ${tarPath}...`);
+        exit = await exec.exec("7z", ["x", tarPath, `-o${options.directory}`, "-y"]);
+        fs.unlinkSync(tarPath);
+        if (exit !== 0) break;
+
+        // Check for new tar intermediates produced by this extraction
+        entries = fs.readdirSync(options.directory);
+        tarFiles = entries.filter(f => f.endsWith(".tar") || f.endsWith("~"));
+      }
+    }
+    if (exit === 0) {
+      // Strip wrapper directory (tar archives contain a top-level dir like clang+llvm-VERSION-ARCH/)
+      // Detect by looking for a subdirectory that contains bin/
+      const wrapperDir = fs.readdirSync(options.directory).find(f => {
+        const full = path.join(options.directory, f);
+        try { return fs.statSync(full).isDirectory() && fs.existsSync(path.join(full, "bin")); }
+        catch { return false; }
+      });
+      if (wrapperDir) {
+        const subdir = path.join(options.directory, wrapperDir);
+        // Remove conflicting top-level dirs (pre-installed LLVM may already have bin/, include/, etc.)
+        for (const entry of fs.readdirSync(subdir)) {
+          const target = path.join(options.directory, entry);
+          if (fs.existsSync(target)) fs.rmSync(target, { recursive: true, force: true });
+        }
+        for (const entry of fs.readdirSync(subdir)) {
+          fs.renameSync(path.join(subdir, entry), path.join(options.directory, entry));
+        }
+        fs.rmdirSync(subdir);
+      }
+    }
   } else {
     const directory = options.directory ?? "";
     await io.mkdirP(directory);

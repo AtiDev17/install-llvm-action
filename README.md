@@ -1,6 +1,6 @@
 # install-llvm-action
 
-[![Test](https://github.com/KyleMayes/install-llvm-action/actions/workflows/test.yml/badge.svg)](https://github.com/KyleMayes/install-llvm-action/actions/workflows/test.yml)
+[![Test](https://github.com/AtiDev17/install-llvm-action/actions/workflows/test.yml/badge.svg)](https://github.com/AtiDev17/install-llvm-action/actions/workflows/test.yml)
 
 A GitHub Action for downloading and installing LLVM and Clang binaries.
 
@@ -14,16 +14,25 @@ Released under the Apache License 2.0.
 
 ```yml
 - name: Install LLVM and Clang
-  uses: KyleMayes/install-llvm-action@v2
+  uses: AtiDev17/install-llvm-action@master
   with:
     version: "10.0"
-```
+  ```
+
+## Example Usage (latest version):
+
+```yml
+- name: Install LLVM and Clang
+  uses: AtiDev17/install-llvm-action@master
+  with:
+    version: "latest"
+  ```
 
 ## Example Usage (with non-default installation directory):
 
 ```yml
 - name: Install LLVM and Clang
-  uses: KyleMayes/install-llvm-action@v2
+  uses: AtiDev17/install-llvm-action@master
   with:
     version: "10.0"
     directory: ${{ runner.temp }}/llvm
@@ -47,6 +56,8 @@ If your build system requires a library from the installed LLVM and Clang binari
 **Required** The version of LLVM and Clang binaries to install.
 
 This can be a specific LLVM and Clang version such as `10.1.2` or a minimum version like `10.1` or just `10`. When specifying a minimum version, the highest compatible version supported by the platform will be installed (e.g., `10.1.2` for `10.1` or `10.2.0` for `10`).
+
+This can also be `latest` to automatically install the highest available version for the current platform. This is useful if you want to always use the newest LLVM release without updating your workflow each time.
 
 Note that when using minimum versions like `10` the specific version installed by this action may not be the same on every operating system and architecture (e.g., x86-86 vs ARM64). This is because some versions of the LLVM and Clang binaries do not exist for some operating systems. You can view [this file](assets.json) to see the currently supported LLVM and Clang versions for each operating system and architecture pairing.
 

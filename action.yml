@@ -1,4 +1,4 @@
-name: "Install LLVM and Clang"
+name: "Install LLVM and Clang (fork)"
 description: "Downloads and installs LLVM and Clang binaries."
 
 branding:
@@ -7,7 +7,7 @@ branding:
 
 inputs:
   version:
-    description: "The version of LLVM and Clang binaries to install."
+    description: "The version of LLVM and Clang binaries to install (e.g., `17`, `17.0.2`, or `latest`)."
     required: true
   arch:
     description: "The archtecture (either `x64` or `arm64`) to install LLVM and Clang binaries for."
@@ -36,5 +36,5 @@ outputs:
     description: "The full version of LLVM and Clang binaries installed."
 
 runs:
-  using: "node20"
+  using: "node24"
   main: "dist/main.js"

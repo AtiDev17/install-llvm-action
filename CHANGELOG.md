@@ -1,3 +1,14 @@
+## [2.0.11] - 2026-08-26
+
+- Added support for LLVM and Clang 23
+- Updated Windows asset format from `.exe` to `.tar.xz` (LLVM 23+ dropped `.exe` installers)
+
+## [2.0.10] - 2026-07-07
+
+- Added support for LLVM and Clang 22
+- Updated action runtime from Node 20 to Node 24
+- Updated workflows and dependencies to latest versions
+
 ## [2.0.9] - 2026-01-20
 
 - Added support for additional LLVM and Clang 20/21 versions
